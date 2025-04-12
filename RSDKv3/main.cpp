@@ -1,6 +1,5 @@
 #include "RetroEngine.hpp"
 #include "Archipelago.hpp"
-#include <unistd.h>
 
 #if !RETRO_USE_ORIGINAL_CODE
 
@@ -57,7 +56,6 @@ int main(int argc, char *argv[])
 #endif
 
     init_archipelago();
-    usleep(2000000);
     Engine.Init();
     Engine.Run();
 
