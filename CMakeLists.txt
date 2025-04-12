@@ -24,6 +24,7 @@ set(RETRO_FILES
     dependencies/all/tinyxml2/tinyxml2.cpp
     dependencies/all/theoraplay/theoraplay.c
     RSDKv3/Animation.cpp
+    RSDKv3/Archipelago.cpp
     RSDKv3/Audio.cpp
     RSDKv3/Collision.cpp
     RSDKv3/Debug.cpp
@@ -62,6 +63,22 @@ endif()
 include(platforms/${PLATFORM}.cmake)
 
 set_target_properties(RetroEngine PROPERTIES OUTPUT_NAME ${RETRO_OUTPUT_NAME})
+
+# TODO: Add Windows and macOS support, preferably via git submodule
+
+# include(ExternalProject)
+# ExternalProject_Add(
+#     APCppSrc
+#     PREFIX ${CMAKE_BINARY_DIR}/APCpp
+#     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/all/APCpp
+#     INSTALL_COMMAND ""
+# )
+
+add_library(APCpp SHARED IMPORTED)
+# set_property(TARGET APCpp PROPERTY IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/APCpp/src/APCppSrc-build/libAPCpp.so)
+set_property(TARGET APCpp PROPERTY IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/dependencies/include/libAPCpp.so)
+target_include_directories(RetroEngine PRIVATE ${CMAKE_SOURCE_DIR}/dependencies/include/)
+target_link_libraries(RetroEngine APCpp)
 
 if(COMPILE_OGG)
     set(OGG_DIR dependencies/${DEP_PATH}/libogg)
@@ -180,9 +197,9 @@ target_compile_definitions(RetroEngine PRIVATE
     RETRO_USE_SDL${RETRO_SDL_VERSION}=1
     FORCE_CASE_INSENSITIVE=$<BOOL:${RETRO_FORCE_CASE_INSENSITIVE}>
     RETRO_USE_ORIGINAL_CODE=$<BOOL:${RETRO_ORIGINAL_CODE}>
-    
+
     RSDK_AUTOBUILD=$<BOOL:${RETRO_DISABLE_PLUS}>
-    
+
     RETRO_DEV_EXTRA="${PLATFORM} - ${CMAKE_CXX_COMPILER_ID}"
     DECOMP_VERSION="${DECOMP_VERSION}"
 )
