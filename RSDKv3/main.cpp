@@ -1,5 +1,4 @@
 #include "RetroEngine.hpp"
-#include "Archipelago.hpp"
 
 #if !RETRO_USE_ORIGINAL_CODE
 
@@ -55,7 +54,6 @@ int main(int argc, char *argv[])
     parseArguments(argc, argv);
 #endif
 
-    init_archipelago();
     Engine.Init();
     Engine.Run();
 

@@ -7,6 +7,7 @@
 #if RETRO_PLATFORM == RETRO_ANDROID
 #include <unistd.h>
 #endif
+#include "Archipelago.hpp"
 
 bool usingCWD        = false;
 bool engineDebugMode = false;
@@ -301,6 +302,8 @@ void RetroEngine::Init()
                 initialised = true;
                 running     = true;
                 gameMode    = ENGINE_MAINGAME;
+
+                SCDAP_Init();
             }
         }
     }
@@ -1020,7 +1023,7 @@ bool RetroEngine::LoadGameConfig(const char *filePath)
             FileRead(&fileBuffer2, 1);
             globalVariables[v] += fileBuffer2;
         }
-        
+
         SetGlobalVariableByName("Options.DevMenuFlag", devMenu ? 1 : 0);
         SetGlobalVariableByName("Engine.PlatformId", RETRO_GAMEPLATFORMID);
         SetGlobalVariableByName("Engine.DeviceType", RETRO_GAMEPLATFORM);
