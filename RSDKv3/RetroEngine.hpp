@@ -318,7 +318,7 @@ enum RetroEngineCallbacks {
     CALLBACK_ONVISIBLEMAINMENU_0              = 1017,
     CALLBACK_ONSHOWREWARDADS                  = 1018,
     CALLBACK_ONSHOWBANNER_2                   = 1019,
-    CALLBACK_ONSHOWINTERSTITIAL_5             = 1020, 
+    CALLBACK_ONSHOWINTERSTITIAL_5             = 1020,
 
 #if RETRO_USE_MOD_LOADER
     // Mod CBs start at 0x1000
@@ -401,6 +401,7 @@ extern byte renderType;
 #include "Userdata.hpp"
 #include "Debug.hpp"
 #include "ModAPI.hpp"
+#include "Archipelago.hpp"
 
 class RetroEngine
 {
@@ -471,6 +472,10 @@ public:
     bool showPaletteOverlay = false;
     bool useHQModes         = true;
 #endif
+
+    char SCDAP_IP[0x128];
+    char SCDAP_SlotName[0x16];
+    char SCDAP_Password[0x128];
 
     void Init();
     void Run();

@@ -78,7 +78,7 @@ bool forceUseScripts_Config = false;
 bool useSGame = false;
 
 //#if RETRO_PLATFORM == RETRO_LINUX
-//std::string getXDGDataPath() 
+//std::string getXDGDataPath()
 //{
   //  std::string path;
   //  char const *dataHome = getenv("XDG_DATA_HOME");
@@ -338,6 +338,14 @@ void InitUserdata()
     FileIO *file = fOpen(buffer, "rb");
     IniParser ini;
     if (!file) {
+        // TODO: Create an Archipelago class for storing state like this
+        sprintf(Engine.SCDAP_IP, "%s", "localhost:38281");
+        ini.SetString("Archipelago", "ServerIP", Engine.SCDAP_IP);
+        sprintf(Engine.SCDAP_SlotName, "%s", "Player1");
+        ini.SetString("Archipelago", "SlotName", Engine.SCDAP_SlotName);
+        sprintf(Engine.SCDAP_Password, "%s", "");
+        ini.SetString("Archipelago", "ServerIP", Engine.SCDAP_Password);
+
         ini.SetBool("Dev", "DevMenu", Engine.devMenu = false);
         ini.SetBool("Dev", "EngineDebugMode", engineDebugMode = false);
         ini.SetBool("Dev", "TxtScripts", forceUseScripts = false);
@@ -440,6 +448,14 @@ void InitUserdata()
     else {
         fClose(file);
         ini = IniParser(buffer, false);
+
+        // TODO: Create an Archipelago class for storing state like this
+        if (!ini.GetString("Archipelago", "ServerIP", Engine.SCDAP_IP))
+            StrCopy(Engine.SCDAP_IP, "localhost:38281");
+        if (!ini.GetString("Archipelago", "SlotName", Engine.SCDAP_SlotName))
+            StrCopy(Engine.SCDAP_SlotName, "Player1");
+        if (!ini.GetString("Archipelago", "Password", Engine.SCDAP_Password))
+            StrCopy(Engine.SCDAP_Password, "");
 
         if (!ini.GetBool("Dev", "DevMenu", &Engine.devMenu))
             Engine.devMenu = false;
@@ -750,6 +766,14 @@ void InitUserdata()
 void WriteSettings()
 {
     IniParser ini;
+
+    // TODO: Create an Archipelago class for storing state like this
+    ini.SetComment("Archipelago", "ServerIPComment", "The Archipelago randomizer server to connect to");
+    ini.SetString("Archipelago", "ServerIP", Engine.SCDAP_IP);
+    ini.SetComment("Archipelago", "SlotNameComment", "The player slot name to connect to");
+    ini.SetString("Archipelago", "SlotName", Engine.SCDAP_SlotName);
+    ini.SetComment("Archipelago", "ServerPasswordComment", "The server's password");
+    ini.SetString("Archipelago", "Password", Engine.SCDAP_Password);
 
     ini.SetComment("Dev", "DevMenuComment", "Enable this flag to activate dev menu via the ESC key");
     ini.SetBool("Dev", "DevMenu", Engine.devMenu);

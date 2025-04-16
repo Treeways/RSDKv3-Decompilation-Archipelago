@@ -53,6 +53,8 @@ void InitDevMenu()
     AddTextMenuEntry(&gameMenu[0], "MODS");
     AddTextMenuEntry(&gameMenu[0], " ");
 #endif
+    AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
+    AddTextMenuEntry(&gameMenu[0], " ");
     AddTextMenuEntry(&gameMenu[0], "EXIT GAME");
     gameMenu[0].alignment        = 2;
     gameMenu[0].selectionCount   = 2;
@@ -167,7 +169,7 @@ void ProcessStageSelect()
             if (keyPress.up)
                 gameMenu[0].selection2 -= 2;
 
-            int count = 13;
+            int count = 15;
 #if RETRO_USE_MOD_LOADER
             count += 2;
 #endif
@@ -232,6 +234,23 @@ void ProcessStageSelect()
                     stageMode                    = DEVMENU_MODMENU;
                 }
 #endif
+                else if (gameMenu[0].selection2 == 15) {
+                    // Set up Archipelago menu
+                    SetupTextMenu(&gameMenu[0], 0);
+                    AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], SCDAP_GetConnectionStatusAsString());
+                    SetupTextMenu(&gameMenu[1], 0);
+                    AddTextMenuEntry(&gameMenu[1], "CONNECT TO SERVER");
+                    AddTextMenuEntry(&gameMenu[1], " ");
+                    AddTextMenuEntry(&gameMenu[1], "DISCONNECT AND RESET");
+
+                    gameMenu[1].alignment      = 2;
+                    gameMenu[1].selectionCount = 1;
+                    gameMenu[1].selection1     = 0;
+                    gameMenu[1].timer          = 0;
+                    stageMode                  = DEVMENU_ARCHIPELAGO;
+                }
                 else {
                     Engine.running = false;
                 }
@@ -309,6 +328,8 @@ void ProcessStageSelect()
                 AddTextMenuEntry(&gameMenu[0], "MODS");
                 AddTextMenuEntry(&gameMenu[0], " ");
 #endif
+                AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
+                AddTextMenuEntry(&gameMenu[0], " ");
                 AddTextMenuEntry(&gameMenu[0], "EXIT GAME");
                 gameMenu[0].alignment        = 2;
                 gameMenu[0].selectionCount   = 2;
@@ -494,6 +515,8 @@ void ProcessStageSelect()
                 AddTextMenuEntry(&gameMenu[0], "MODS");
                 AddTextMenuEntry(&gameMenu[0], " ");
 #endif
+                AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
+                AddTextMenuEntry(&gameMenu[0], " ");
                 AddTextMenuEntry(&gameMenu[0], "EXIT GAME");
                 gameMenu[0].alignment        = 2;
                 gameMenu[0].selectionCount   = 2;
@@ -651,6 +674,8 @@ void ProcessStageSelect()
                 AddTextMenuEntry(&gameMenu[0], " ");
                 AddTextMenuEntry(&gameMenu[0], "MODS");
                 AddTextMenuEntry(&gameMenu[0], " ");
+                AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
+                AddTextMenuEntry(&gameMenu[0], " ");
                 AddTextMenuEntry(&gameMenu[0], "EXIT GAME");
                 gameMenu[0].alignment        = 2;
                 gameMenu[0].selectionCount   = 2;
@@ -665,6 +690,89 @@ void ProcessStageSelect()
             break;
         }
 #endif
+
+        case DEVMENU_ARCHIPELAGO: // Archipelago randomizer menu
+        {
+            DrawTextMenu(&gameMenu[0], SCREEN_CENTERX, 72);
+            DrawTextMenu(&gameMenu[1], SCREEN_CENTERX, 150);
+
+            gameMenu[1].timer += 1;
+            if (gameMenu[1].timer >= 10) {
+                gameMenu[1].timer = 0;
+                SetupTextMenu(&gameMenu[0], 0);
+                AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
+                AddTextMenuEntry(&gameMenu[0], " ");
+                AddTextMenuEntry(&gameMenu[0], SCDAP_GetConnectionStatusAsString());
+            }
+
+            if (keyPress.down) {
+                gameMenu[1].selection1 += 2;
+            }
+            if (keyPress.up) {
+                gameMenu[1].selection1 -= 2;
+            }
+            if (gameMenu[1].selection1 >= gameMenu[1].rowCount) {
+                gameMenu[1].selection1 = 0;
+            }
+            if (gameMenu[1].selection1 < 0) {
+                gameMenu[1].selection1 = gameMenu[1].rowCount - 1;
+            }
+
+            bool backToDevMenu = false;
+            if (keyPress.start || keyPress.A) {
+                if (gameMenu[1].selection1 == 0) { // "Connect to server"
+                    if (!SCDAP_IsConnected()) {
+                        SCDAP_Init();
+                    }
+                }
+                else if (gameMenu[1].selection1 == 2) { // "Disconnect from server"
+                    SCDAP_Shutdown();
+                }
+            }
+            else if (keyPress.B) {
+                backToDevMenu = true;
+            }
+
+            if (backToDevMenu) {
+                // REFACTOR (upstream): I had to change five separate main menu layouts for this...
+                stageMode = DEVMENU_MAIN;
+                SetupTextMenu(&gameMenu[0], 0);
+                AddTextMenuEntry(&gameMenu[0], "RETRO ENGINE DEV MENU");
+                AddTextMenuEntry(&gameMenu[0], " ");
+                char version[0x80];
+                StrCopy(version, Engine.gameWindowText);
+                StrAdd(version, " Version");
+                AddTextMenuEntry(&gameMenu[0], version);
+                AddTextMenuEntry(&gameMenu[0], Engine.gameVersion);
+    #ifdef RETRO_DEV_EXTRA
+                AddTextMenuEntry(&gameMenu[0], RETRO_DEV_EXTRA);
+    #else
+                AddTextMenuEntry(&gameMenu[0], " ");
+    #endif
+                AddTextMenuEntry(&gameMenu[0], " ");
+                AddTextMenuEntry(&gameMenu[0], " ");
+                AddTextMenuEntry(&gameMenu[0], " ");
+                AddTextMenuEntry(&gameMenu[0], " ");
+                AddTextMenuEntry(&gameMenu[0], "START GAME");
+                AddTextMenuEntry(&gameMenu[0], " ");
+                AddTextMenuEntry(&gameMenu[0], "STAGE SELECT");
+                AddTextMenuEntry(&gameMenu[0], " ");
+    #if RETRO_USE_MOD_LOADER
+                AddTextMenuEntry(&gameMenu[0], "MODS");
+                AddTextMenuEntry(&gameMenu[0], " ");
+    #endif
+                AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
+                AddTextMenuEntry(&gameMenu[0], " ");
+                AddTextMenuEntry(&gameMenu[0], "EXIT GAME");
+                gameMenu[0].alignment        = 2;
+                gameMenu[0].selectionCount   = 2;
+                gameMenu[0].selection1       = 0;
+                gameMenu[0].selection2       = 9;
+                gameMenu[1].visibleRowCount  = 0;
+                gameMenu[1].visibleRowOffset = 0;
+            }
+            break;
+        }
 
         default: break;
     }
