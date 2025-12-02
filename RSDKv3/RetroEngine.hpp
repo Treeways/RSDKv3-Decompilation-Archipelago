@@ -222,6 +222,9 @@ enum RetroStates {
     ENGINE_PAUSE           = 7,
     ENGINE_WAIT            = 8,
     ENGINE_VIDEOWAIT       = 9,
+#if RETRO_USE_MOD_LOADER
+    ENGINE_INITMODMENU = 0x82,
+#endif
 };
 
 enum RetroEngineMessages {
@@ -295,6 +298,9 @@ enum RetroEngineCallbacks {
 
     // Sega Forever stuff
     // Mod CBs start at about 1000
+    CALLBACK_STARTGAME                        = 101,
+    CALLBACK_NONE_104                         = 104,
+    CALLBACK_SHOWURL                          = 107,
     CALLBACK_SHOWMENU_2                       = 997,
     CALLBACK_SHOWHELPCENTER                   = 998,
     CALLBACK_CHANGEADSTYPE                    = 999,
@@ -324,6 +330,9 @@ enum RetroEngineCallbacks {
     // Mod CBs start at 0x1000
     CALLBACK_SET1P = 0x1001,
     CALLBACK_SET2P = 0x1002,
+    CALLBACK_GETWINDOWINFO    = 0x1003,
+    CALLBACK_SETWINDOWCHANGES = 0x1004,
+    CALLBACK_OPENMODMENU      = 0x1005,
 #endif
 };
 
@@ -504,7 +513,7 @@ public:
 #ifdef DECOMP_VERSION
     const char *gameVersion = DECOMP_VERSION;
 #else
-    const char *gameVersion = "1.3.2";
+    const char *gameVersion = "1.3.3";
 #endif
     const char *gamePlatform;
 
@@ -517,6 +526,10 @@ public:
     const char *gameHapticSetting = "Use_Haptics";
 #else
     const char *gameHapticSetting = "No_Haptics";
+#endif
+
+#if RETRO_USE_MOD_LOADER
+    bool modMenuCalled = false;
 #endif
 
     int gameTypeID          = 0;

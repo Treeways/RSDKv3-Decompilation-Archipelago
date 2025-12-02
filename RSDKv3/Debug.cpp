@@ -111,11 +111,11 @@ void ProcessStageSelect()
     CheckKeyDown(&keyDown, 0xFF);
     CheckKeyPress(&keyPress, 0xFF);
 
-    //#if defined RETRO_USING_MOUSE || defined RETRO_USING_TOUCH
+    // #if defined RETRO_USING_MOUSE || defined RETRO_USING_TOUCH
     DrawSprite(32, 0x42, 16, 16, 78, 240, textMenuSurfaceNo);
     DrawSprite(32, 0xB2, 16, 16, 95, 240, textMenuSurfaceNo);
     DrawSprite(SCREEN_XSIZE - 32, SCREEN_YSIZE - 32, 16, 16, 112, 240, textMenuSurfaceNo);
-    //#endif
+    // #endif
 
     if (!keyDown.start && !keyDown.up && !keyDown.down) {
         int tFlags = touchFlags;
@@ -650,135 +650,147 @@ void ProcessStageSelect()
             else if (keyPress.B) {
                 RefreshEngine();
 
-                stageMode = DEVMENU_MAIN;
-                SetupTextMenu(&gameMenu[0], 0);
-                AddTextMenuEntry(&gameMenu[0], "RETRO ENGINE DEV MENU");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                char version[0x80];
-                StrCopy(version, Engine.gameWindowText);
-                StrAdd(version, " Version");
-                AddTextMenuEntry(&gameMenu[0], version);
-                AddTextMenuEntry(&gameMenu[0], Engine.gameVersion);
+                if (Engine.modMenuCalled) {
+                    stageMode            = STAGEMODE_LOAD;
+                    Engine.gameMode      = ENGINE_MAINGAME;
+                    Engine.modMenuCalled = false;
+
+                    if (stageListPosition >= stageListCount[activeStageList]) {
+                        activeStageList   = 0;
+                        stageListPosition = 0;
+                    }
+                }
+                else {
+                    stageMode = DEVMENU_MAIN;
+                    SetupTextMenu(&gameMenu[0], 0);
+                    AddTextMenuEntry(&gameMenu[0], "RETRO ENGINE DEV MENU");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    char version[0x80];
+                    StrCopy(version, Engine.gameWindowText);
+                    StrAdd(version, " Version");
+                    AddTextMenuEntry(&gameMenu[0], version);
+                    AddTextMenuEntry(&gameMenu[0], Engine.gameVersion);
 #ifdef RETRO_DEV_EXTRA
-                AddTextMenuEntry(&gameMenu[0], RETRO_DEV_EXTRA);
+                    AddTextMenuEntry(&gameMenu[0], RETRO_DEV_EXTRA);
+#else
+                    AddTextMenuEntry(&gameMenu[0], " ");
+#endif
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], "START GAME");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], "STAGE SELECT");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], "MODS");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], "EXIT GAME");
+                    gameMenu[0].alignment        = 2;
+                    gameMenu[0].selectionCount   = 2;
+                    gameMenu[0].selection1       = 0;
+                    gameMenu[0].selection2       = 9;
+                    gameMenu[1].visibleRowCount  = 0;
+                    gameMenu[1].visibleRowOffset = 0;
+                }
+
+                DrawTextMenu(&gameMenu[0], SCREEN_CENTERX - 4, 40);
+                DrawTextMenu(&gameMenu[1], SCREEN_CENTERX + 100, 64);
+                break;
+            }
+#endif
+        }
+
+            case DEVMENU_ARCHIPELAGO: // Archipelago randomizer menu
+            {
+                DrawTextMenu(&gameMenu[0], SCREEN_CENTERX, 72);
+                DrawTextMenu(&gameMenu[1], SCREEN_CENTERX, 150);
+
+                gameMenu[1].timer += 1;
+                if (gameMenu[1].timer >= 10) {
+                    gameMenu[1].timer = 0;
+                    SetupTextMenu(&gameMenu[0], 0);
+                    AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], SCDAP_GetConnectionStatusAsString());
+                }
+
+                if (keyPress.down) {
+                    gameMenu[1].selection1 += 2;
+                }
+                if (keyPress.up) {
+                    gameMenu[1].selection1 -= 2;
+                }
+                if (gameMenu[1].selection1 >= gameMenu[1].rowCount) {
+                    gameMenu[1].selection1 = 0;
+                }
+                if (gameMenu[1].selection1 < 0) {
+                    gameMenu[1].selection1 = gameMenu[1].rowCount - 1;
+                }
+
+                bool backToDevMenu = false;
+                if (keyPress.start || keyPress.A) {
+                    if (gameMenu[1].selection1 == 0) { // "Connect to server"
+                        if (!SCDAP_IsConnected()) {
+                            SCDAP_Init();
+                        }
+                    }
+                    else if (gameMenu[1].selection1 == 2) { // "Disconnect from server"
+                        SCDAP_Shutdown();
+                    }
+                }
+                else if (keyPress.B) {
+                    backToDevMenu = true;
+                }
+
+                if (backToDevMenu) {
+                    // REFACTOR (upstream): I had to change five separate main menu layouts for this...
+                    stageMode = DEVMENU_MAIN;
+                    SetupTextMenu(&gameMenu[0], 0);
+                    AddTextMenuEntry(&gameMenu[0], "RETRO ENGINE DEV MENU");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    char version[0x80];
+                    StrCopy(version, Engine.gameWindowText);
+                    StrAdd(version, " Version");
+                    AddTextMenuEntry(&gameMenu[0], version);
+                    AddTextMenuEntry(&gameMenu[0], Engine.gameVersion);
+#ifdef RETRO_DEV_EXTRA
+                    AddTextMenuEntry(&gameMenu[0], RETRO_DEV_EXTRA);
 #else
                 AddTextMenuEntry(&gameMenu[0], " ");
 #endif
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], "START GAME");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], "STAGE SELECT");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], "MODS");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], "EXIT GAME");
-                gameMenu[0].alignment        = 2;
-                gameMenu[0].selectionCount   = 2;
-                gameMenu[0].selection1       = 0;
-                gameMenu[0].selection2       = 9;
-                gameMenu[1].visibleRowCount  = 0;
-                gameMenu[1].visibleRowOffset = 0;
-            }
-
-            DrawTextMenu(&gameMenu[0], SCREEN_CENTERX - 4, 40);
-            DrawTextMenu(&gameMenu[1], SCREEN_CENTERX + 100, 64);
-            break;
-        }
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], "START GAME");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], "STAGE SELECT");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+#if RETRO_USE_MOD_LOADER
+                    AddTextMenuEntry(&gameMenu[0], "MODS");
+                    AddTextMenuEntry(&gameMenu[0], " ");
 #endif
-
-        case DEVMENU_ARCHIPELAGO: // Archipelago randomizer menu
-        {
-            DrawTextMenu(&gameMenu[0], SCREEN_CENTERX, 72);
-            DrawTextMenu(&gameMenu[1], SCREEN_CENTERX, 150);
-
-            gameMenu[1].timer += 1;
-            if (gameMenu[1].timer >= 10) {
-                gameMenu[1].timer = 0;
-                SetupTextMenu(&gameMenu[0], 0);
-                AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], SCDAP_GetConnectionStatusAsString());
-            }
-
-            if (keyPress.down) {
-                gameMenu[1].selection1 += 2;
-            }
-            if (keyPress.up) {
-                gameMenu[1].selection1 -= 2;
-            }
-            if (gameMenu[1].selection1 >= gameMenu[1].rowCount) {
-                gameMenu[1].selection1 = 0;
-            }
-            if (gameMenu[1].selection1 < 0) {
-                gameMenu[1].selection1 = gameMenu[1].rowCount - 1;
-            }
-
-            bool backToDevMenu = false;
-            if (keyPress.start || keyPress.A) {
-                if (gameMenu[1].selection1 == 0) { // "Connect to server"
-                    if (!SCDAP_IsConnected()) {
-                        SCDAP_Init();
-                    }
+                    AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
+                    AddTextMenuEntry(&gameMenu[0], " ");
+                    AddTextMenuEntry(&gameMenu[0], "EXIT GAME");
+                    gameMenu[0].alignment        = 2;
+                    gameMenu[0].selectionCount   = 2;
+                    gameMenu[0].selection1       = 0;
+                    gameMenu[0].selection2       = 9;
+                    gameMenu[1].visibleRowCount  = 0;
+                    gameMenu[1].visibleRowOffset = 0;
                 }
-                else if (gameMenu[1].selection1 == 2) { // "Disconnect from server"
-                    SCDAP_Shutdown();
-                }
-            }
-            else if (keyPress.B) {
-                backToDevMenu = true;
+                break;
             }
 
-            if (backToDevMenu) {
-                // REFACTOR (upstream): I had to change five separate main menu layouts for this...
-                stageMode = DEVMENU_MAIN;
-                SetupTextMenu(&gameMenu[0], 0);
-                AddTextMenuEntry(&gameMenu[0], "RETRO ENGINE DEV MENU");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                char version[0x80];
-                StrCopy(version, Engine.gameWindowText);
-                StrAdd(version, " Version");
-                AddTextMenuEntry(&gameMenu[0], version);
-                AddTextMenuEntry(&gameMenu[0], Engine.gameVersion);
-    #ifdef RETRO_DEV_EXTRA
-                AddTextMenuEntry(&gameMenu[0], RETRO_DEV_EXTRA);
-    #else
-                AddTextMenuEntry(&gameMenu[0], " ");
-    #endif
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], "START GAME");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], "STAGE SELECT");
-                AddTextMenuEntry(&gameMenu[0], " ");
-    #if RETRO_USE_MOD_LOADER
-                AddTextMenuEntry(&gameMenu[0], "MODS");
-                AddTextMenuEntry(&gameMenu[0], " ");
-    #endif
-                AddTextMenuEntry(&gameMenu[0], "ARCHIPELAGO");
-                AddTextMenuEntry(&gameMenu[0], " ");
-                AddTextMenuEntry(&gameMenu[0], "EXIT GAME");
-                gameMenu[0].alignment        = 2;
-                gameMenu[0].selectionCount   = 2;
-                gameMenu[0].selection1       = 0;
-                gameMenu[0].selection2       = 9;
-                gameMenu[1].visibleRowCount  = 0;
-                gameMenu[1].visibleRowOffset = 0;
-            }
-            break;
+            default: break;
         }
 
-        default: break;
+            if (renderType == RENDER_HW) {
+                gfxIndexSizeOpaque  = gfxIndexSize;
+                gfxVertexSizeOpaque = gfxVertexSize;
+            }
     }
-
-    if (renderType == RENDER_HW) {
-        gfxIndexSizeOpaque  = gfxIndexSize;
-        gfxVertexSizeOpaque = gfxVertexSize;
-    }
-}
