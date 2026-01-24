@@ -8,6 +8,7 @@
 struct Entity {
     int XPos;
     int YPos;
+    std::string SCDAP_Id;
     int values[8];
     int scale;
     int rotation;

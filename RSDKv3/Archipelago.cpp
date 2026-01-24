@@ -1,6 +1,17 @@
 #include <Archipelago.h>
+#include "Archipelago.hpp"
 
 bool connecting = false;
+
+template <typename T> std::string int_to_hex(T i, int widthNumerator, int widthDenomenator) {
+	if (std::is_same<T, int>::value) {
+		std::stringstream stream;
+		stream << std::setfill('0') << std::setw(sizeof(T) * widthNumerator / widthDenomenator) << std::uppercase
+			<< std::hex << static_cast<unsigned long long>(i);
+		return stream.str();
+	}
+	return "";
+}
 
 void SCDAP_ResetAllItems() {} // TODO
 void SCDAP_ReceiveItem(int64_t id, bool state) {} // TODO
@@ -50,4 +61,11 @@ const char* SCDAP_GetConnectionStatusAsString() {
 			break;
 	}
 	return "Unknown";
+}
+
+const std::string SCDAP_GenerateUUID(const int &activeStageList, const int &stageListPosition, const int &x, const int &y) {
+	std::stringstream stream;
+	// stream << activeStageList << " " << int_to_hex(stageListPosition, 1, 2) << " " << int_to_hex(x) << " " << int_to_hex(y);
+	stream << activeStageList << int_to_hex(stageListPosition, 1, 2) << int_to_hex(x) << int_to_hex(y);
+	return stream.str();
 }

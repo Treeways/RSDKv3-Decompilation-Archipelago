@@ -708,17 +708,45 @@ void LoadActLayout()
             FileRead(&fileBuffer, 1);
             object->propertyValue = fileBuffer;
 
+            // int xValues[3];
+            // int yValues[3];
+            // [1] is X and [2] is Y
+            int adjustedCoords[2];
+
             FileRead(&fileBuffer, 1);
+            // printf("FB1 : %d\n", fileBuffer);
             object->XPos = fileBuffer << 8;
+            // xValues[0] = object->XPos;
             FileRead(&fileBuffer, 1);
             object->XPos += fileBuffer;
+            adjustedCoords[1] = object->XPos;
+            // xValues[1] = object->XPos;
             object->XPos <<= 16;
+            // xValues[2] = object->XPos;
 
             FileRead(&fileBuffer, 1);
             object->YPos = fileBuffer << 8;
+            // yValues[0] = object->YPos;
             FileRead(&fileBuffer, 1);
             object->YPos += fileBuffer;
+            adjustedCoords[2] = object->YPos;
+            // yValues[1] = object->YPos;
             object->YPos <<= 16;
+            // yValues[2] = object->YPos;
+
+            object->SCDAP_Id = SCDAP_GenerateUUID(activeStageList, stageListPosition, adjustedCoords[1], adjustedCoords[2]);
+
+            // printf("activeStageList : %d\n", activeStageList);
+            // printf("stageListPosition : %d\n", stageListPosition);
+            // printf("<<8 : %d , ", xValues[0]);
+            // printf("%d\n", yValues[0]);
+            // printf("+=fb: %d , ", adjustedCoords[1]);
+            // printf("%d\n", adjustedCoords[2]);
+            // printf("<<16: %x , ", xValues[2]);
+            // printf("%x\n", yValues[2]);
+            // printf("PV  : %hhu\n", object->propertyValue);
+            // printf("UUID: %s\n", object->SCDAP_Id.c_str());
+            // puts("");
 
             ++object;
         }
