@@ -1,5 +1,5 @@
-#include <cstdint>
-#include <iomanip>
+#ifndef ARCHIPELAGO_HPP
+#define ARCHIPELAGO_HPP
 
 template <typename T> std::string int_to_hex(T i, int widthNumerator = 1, int widthDenomenator = 1);
 
@@ -15,3 +15,5 @@ bool SCDAP_IsConnected();
 const char *SCDAP_GetConnectionStatusAsString();
 
 const std::string SCDAP_GenerateUUID(const int &activeStageList, const int &stageListPosition, const int &x, const int &y);
+
+#endif

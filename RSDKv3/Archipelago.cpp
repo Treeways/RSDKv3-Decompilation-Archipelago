@@ -1,5 +1,6 @@
 #include <Archipelago.h>
 #include "Archipelago.hpp"
+#include <iomanip>
 
 bool connecting = false;
 
