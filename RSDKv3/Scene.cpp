@@ -738,6 +738,7 @@ void LoadActLayout()
 
             // printf("activeStageList : %d\n", activeStageList);
             // printf("stageListPosition : %d\n", stageListPosition);
+            // printf("actID : %d\n", actID);
             // printf("<<8 : %d , ", xValues[0]);
             // printf("%d\n", yValues[0]);
             // printf("+=fb: %d , ", adjustedCoords[1]);
