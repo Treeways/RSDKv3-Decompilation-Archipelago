@@ -459,14 +459,14 @@ void RetroEngine::Run()
                             if (ProcessVideo() == 1)
                                 gameMode = ENGINE_MAINGAME;
                             break;
-                            
+
 #if RETRO_USE_MOD_LOADER
                         case ENGINE_INITMODMENU:
                             Engine.LoadGameConfig("Data/Game/GameConfig.bin");
                             InitDevMenu();
 
                             ResetCurrentStageFolder();
-                            
+
                             SetupTextMenu(&gameMenu[0], 0);
                             AddTextMenuEntry(&gameMenu[0], "MOD LIST");
                             SetupTextMenu(&gameMenu[1], 0);
@@ -632,10 +632,13 @@ void RetroEngine::LoadXMLVariables()
                             if (valAttr)
                                 varValue = GetXMLAttributeValueInt(valAttr);
 
-                            StrCopy(globalVariableNames[globalVariablesCount], varName);
-                            globalVariables[globalVariablesCount] = varValue;
-                            globalVariablesCount++;
-
+                            if (globalVariablesCount >= GLOBALVAR_COUNT)
+                                PrintLog("Failed to add global variable '%s' (max limit reached)", varName);
+                            else if (GetGlobalVariableID(varName) == 0xFF) {
+                                StrCopy(globalVariableNames[globalVariablesCount], varName);
+                                globalVariables[globalVariablesCount] = varValue;
+                                globalVariablesCount++;
+                            }
                         } while ((varElement = NextXMLSiblingElement(doc, varElement, "variable")));
                     }
                 }
@@ -1074,9 +1077,11 @@ bool RetroEngine::LoadGameConfig(const char *filePath)
             globalVariables[v] += fileBuffer2;
         }
 
+#if !RETRO_USE_MOD_LOADER // These are moved to after Game.xml initialization with the mod loader
         SetGlobalVariableByName("Options.DevMenuFlag", devMenu ? 1 : 0);
         SetGlobalVariableByName("Engine.PlatformId", RETRO_GAMEPLATFORMID);
         SetGlobalVariableByName("Engine.DeviceType", RETRO_GAMEPLATFORM);
+#endif
 
         // Read SFX
         byte sfxCount = 0;
@@ -1137,6 +1142,25 @@ bool RetroEngine::LoadGameConfig(const char *filePath)
             }
         }
 
+        CloseFile();
+
+#if RETRO_USE_MOD_LOADER
+        LoadXMLWindowText();
+        LoadXMLVariables();
+        LoadXMLPalettes();
+        LoadXMLObjects();
+        LoadXMLPlayers(NULL);
+        LoadXMLStages(NULL, 0);
+
+        // These are normally earlier in this function, moved here for modders' sake
+        SetGlobalVariableByName("Options.DevMenuFlag", devMenu ? 1 : 0);
+        SetGlobalVariableByName("Engine.PlatformId", RETRO_GAMEPLATFORMID);
+        SetGlobalVariableByName("Engine.DeviceType", RETRO_GAMEPLATFORM);
+
+        SetGlobalVariableByName("Engine.Standalone", 1);
+        SetGlobalVariableByName("game.hasPlusDLC", !RSDK_AUTOBUILD);
+#endif
+
 #if !RETRO_USE_ORIGINAL_CODE
 #if RETRO_USE_MOD_LOADER
         if (!disableSaveIniOverride) {
@@ -1151,23 +1175,7 @@ bool RetroEngine::LoadGameConfig(const char *filePath)
 #if RETRO_USE_MOD_LOADER
         }
 #endif
-#endif
 
-        CloseFile();
-
-#if RETRO_USE_MOD_LOADER
-        LoadXMLWindowText();
-        LoadXMLVariables();
-        LoadXMLPalettes();
-        LoadXMLObjects();
-        LoadXMLPlayers(NULL);
-        LoadXMLStages(NULL, 0);
-
-        SetGlobalVariableByName("Engine.Standalone", 1);
-        SetGlobalVariableByName("game.hasPlusDLC", !RSDK_AUTOBUILD);
-#endif
-
-#if !RETRO_USE_ORIGINAL_CODE
         if (strlen(Engine.startSceneFolder) && strlen(Engine.startSceneID)) {
             SceneInfo *scene = &stageList[STAGELIST_BONUS][0xFE]; // slot 0xFF is used for "none" startStage
             strcpy(scene->name, "_RSDK_SCENE");
@@ -1177,7 +1185,7 @@ bool RetroEngine::LoadGameConfig(const char *filePath)
             startStage_Game = 0xFE;
         }
 
-        Engine.usingOrigins = GetGlobalVariableByName("NOTIFY_1P_VS_SELECT") != 0;
+        Engine.usingOrigins = GetGlobalVariableID("game.playMode") != 0xFF;
 #endif
 
         return true;
@@ -1470,26 +1478,24 @@ void RetroEngine::Callback(int callbackID)
             break;
         case CALLBACK_SETWINDOWCHANGES:
             Engine.startFullScreen = Engine.isFullScreen; // Account for f4 toggle
-            for (int v = 0; v < globalVariablesCount; ++v) {
-                if (StrComp("Engine.Fullscreen", globalVariableNames[v])){
-                    Engine.startFullScreen = globalVariables[v];
-                    Engine.isFullScreen = Engine.startFullScreen;
-                }
-                else if (StrComp("Engine.Borderless", globalVariableNames[v]))
-                    Engine.borderless = globalVariables[v];
-                else if (StrComp("Engine.VSync", globalVariableNames[v]))
-                    Engine.vsync = globalVariables[v];
-                else if (StrComp("Engine.ScalingMode", globalVariableNames[v]))
-                    Engine.scalingMode = globalVariables[v];
-                else if (StrComp("Engine.WindowScale", globalVariableNames[v]))
-                    Engine.windowScale = globalVariables[v];
-                else if (StrComp("Engine.ScreenWidth", globalVariableNames[v])){
-                    SCREEN_XSIZE = globalVariables[v];
-                    SCREEN_XSIZE_CONFIG = SCREEN_XSIZE;
-                }
-                else if (StrComp("Engine.HardwareRenderer", globalVariableNames[v]))
-                    Engine.gameRenderType = gameRenderTypes[globalVariables[v]];
+            if (GetGlobalVariableID("Engine.Fullscreen") != 0xFF) {
+                Engine.startFullScreen = GetGlobalVariableByName("Engine.Fullscreen");
+                Engine.isFullScreen = Engine.startFullScreen;
             }
+            if (GetGlobalVariableID("Engine.Borderless") != 0xFF)
+                Engine.borderless = GetGlobalVariableByName("Engine.Borderless");
+            if (GetGlobalVariableID("Engine.VSync") != 0xFF)
+                Engine.vsync = GetGlobalVariableByName("Engine.VSync");
+            if (GetGlobalVariableID("Engine.ScalingMode") != 0xFF)
+                Engine.scalingMode = GetGlobalVariableByName("Engine.ScalingMode");
+            if (GetGlobalVariableID("Engine.WindowScale") != 0xFF)
+                Engine.windowScale = GetGlobalVariableByName("Engine.WindowScale");
+            if (GetGlobalVariableID("Engine.ScreenWidth") != 0xFF) {
+                SCREEN_XSIZE        = GetGlobalVariableByName("Engine.ScreenWidth");
+                SCREEN_XSIZE_CONFIG = SCREEN_XSIZE;
+            }
+            if (GetGlobalVariableID("Engine.HardwareRenderer") != 0xFF)
+                Engine.gameRenderType = gameRenderTypes[GetGlobalVariableByName("Engine.HardwareRenderer")];
 #if RETRO_USING_OPENGL
             for (int i = 0; i < HW_TEXTURE_COUNT; ++i) {
                 glDeleteTextures(1, &gfxTextureID[i]);
